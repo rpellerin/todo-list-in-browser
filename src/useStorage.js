@@ -1,5 +1,11 @@
 import React from "react";
 
+const isFunction = (value) =>
+  value &&
+  (Object.prototype.toString.call(value) === "[object Function]" ||
+    "function" === typeof value ||
+    value instanceof Function);
+
 const LOCAL_STORAGE_TEXT_KEY = "text";
 const LOCAL_STORAGE_COMPLETED_ITEMS = "completed_items";
 
@@ -45,11 +51,15 @@ export const StorageProvider = ({ children }) => {
     pastDataStates.current.push(data);
   }
 
-  const undo = () => {
-    pastDataStates.current.pop();
-    setData(pastDataStates.current[pastDataStates.current.length - 1]);
-  };
-  console.log(pastDataStates.current);
+  const undo = React.useCallback(
+    ({ updateText = true } = { updateText: true }) => {
+      if (pastDataStates.current.length < 2) return;
+      pastDataStates.current.pop();
+      if (updateText)
+        setData(pastDataStates.current[pastDataStates.current.length - 1]);
+    },
+    []
+  );
 
   const reloadFromDatabase = React.useCallback(
     () =>
@@ -95,10 +105,21 @@ export const StorageProvider = ({ children }) => {
   const value = {
     onSave,
     text,
-    setText: (text) => setData((data) => ({ ...data, text })),
+    setText: (functionOrObject) =>
+      setData((data) => ({
+        ...data,
+        text: isFunction(functionOrObject)
+          ? functionOrObject(text)
+          : functionOrObject,
+      })),
     completedItems,
-    setCompletedItems: (fn) =>
-      setData((data) => ({ ...data, completedItems: fn(data.completedItems) })),
+    setCompletedItems: (functionOrObject) =>
+      setData((data) => ({
+        ...data,
+        completedItems: isFunction(functionOrObject)
+          ? functionOrObject(data.completedItems)
+          : functionOrObject,
+      })),
     isSaved,
     setIsSaved,
     reloadFromDatabase,

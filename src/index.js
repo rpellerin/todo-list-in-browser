@@ -17,6 +17,7 @@ const App = () => {
     setText,
     setCompletedItems,
     completedItems,
+    undo,
   } = useStorage();
 
   const [showCompletedItems, setShowCompletedItems] = React.useState(false);
@@ -25,26 +26,39 @@ const App = () => {
 
   React.useEffect(() => {
     const textAreaNode = textArea.current;
-    const onCtrlS = async (e) => {
+    const onKeyDownInTextArea = async (e) => {
       if ((e.ctrlKey === true || e.metaKey === true) && e.key === "s") {
         e.preventDefault();
         await onSave();
       }
+      if ((e.ctrlKey === true || e.metaKey === true) && e.key === "z") {
+        e.stopPropagation();
+        undo({ updateText: false });
+      }
     };
-    textAreaNode.addEventListener("keydown", onCtrlS);
-    return () => textAreaNode.removeEventListener("keydown", onCtrlS);
-  }, [onSave]);
+    textAreaNode.addEventListener("keydown", onKeyDownInTextArea);
+    return () =>
+      textAreaNode.removeEventListener("keydown", onKeyDownInTextArea);
+  }, [onSave, undo]);
 
   React.useEffect(() => {
     if (isSaved) window.document.title = initialPageTitle;
     else window.document.title = `* ${initialPageTitle}`;
   }, [isSaved]);
 
-  const allItems = text.split(/(?:^|\n)-/).map((rawItem, index) => ({
-    rawItem,
-    item: rawItem.replace(/(^[\n\s]+)|([\n\s]+$)/g, ""),
+  const textToLineArray = text.split("\n").map((rawLine, index) => ({
+    rawLine,
     index,
   }));
+
+  const nonCompletedItems = textToLineArray
+    .filter(({ rawLine }) => rawLine.match(/^\s*-/))
+    .map(({ rawLine, index }) => ({
+      rawLine,
+      index,
+      line: rawLine.replace(/^\s*-\s*/g, ""),
+    }))
+    .filter(({ line }) => line.length > 0);
   return (
     <div>
       <Menu
@@ -58,36 +72,38 @@ const App = () => {
         onChange={(e) => setText(e.target.value)}
       ></textarea>
       <ItemsList
+        render={({ line }) => line}
         id="list"
         checked={false}
-        items={allItems.filter(({ item }) => item.length > 0)}
-        onCheckboxCheck={({ item, rawItem, index }) => {
+        items={nonCompletedItems}
+        onCheckboxCheck={({ line, rawLine, index }) => {
           setCompletedItems((completedItems) => [
             ...completedItems,
             {
-              rawItem,
-              item,
+              rawLine,
+              line,
               date: format(new Date(), "yyyy-MM-dd HH:MM"),
             },
           ]);
           setText(
-            allItems
+            textToLineArray
               .filter((_, i) => i !== index)
-              .map(({ rawItem }) => rawItem)
-              .join("-")
+              .map(({ rawLine }) => rawLine)
+              .join("\n")
           );
         }}
       />
       {showCompletedItems && (
         <ItemsList
+          render={({ line, date }) => `${line} (on ${date})`}
           id="completed"
           checked
           items={completedItems}
-          onCheckboxCheck={({ item, rawItem, index }) => {
+          onCheckboxCheck={({ rawLine }, index) => {
             setCompletedItems((completedItems) =>
               completedItems.filter((_, i) => i !== index)
             );
-            setText((text) => `${text.replace(/\n$/, "")}\n-${rawItem}`);
+            setText((text) => `${rawLine}\n${text}`);
           }}
         />
       )}
