@@ -82,7 +82,7 @@ const App = () => {
             {
               rawLine,
               line,
-              date: format(new Date(), "yyyy-MM-dd HH:MM"),
+              date: format(new Date(), "yyyy-MM-dd HH:mm"),
             },
           ]);
           setText(
