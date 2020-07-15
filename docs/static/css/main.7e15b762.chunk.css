@@ -1,0 +1,2 @@
+body,ul{margin:0}ul{padding-top:5px;padding-bottom:5px}#root>div{display:flex;flex-direction:column;height:100vh}nav{flex:0 0 auto;padding:10px}nav~*{flex:1 1;overflow:auto}textarea{min-height:200px}nav~ul#completed{background-color:#eee;border-top:5px inset #ccc;box-sizing:border-box}
+/*# sourceMappingURL=main.7e15b762.chunk.css.map */

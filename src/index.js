@@ -22,10 +22,7 @@ const App = () => {
 
   const [showCompletedItems, setShowCompletedItems] = React.useState(false);
 
-  const textArea = React.useRef();
-
   React.useEffect(() => {
-    const textAreaNode = textArea.current;
     const onKeyDownInTextArea = async (e) => {
       if ((e.ctrlKey === true || e.metaKey === true) && e.key === "s") {
         e.preventDefault();
@@ -36,9 +33,9 @@ const App = () => {
         undo({ updateText: false });
       }
     };
-    textAreaNode.addEventListener("keydown", onKeyDownInTextArea);
+    window.document.addEventListener("keydown", onKeyDownInTextArea);
     return () =>
-      textAreaNode.removeEventListener("keydown", onKeyDownInTextArea);
+      window.document.removeEventListener("keydown", onKeyDownInTextArea);
   }, [onSave, undo]);
 
   React.useEffect(() => {
@@ -66,7 +63,6 @@ const App = () => {
         showCompletedItems={showCompletedItems}
       />
       <textarea
-        ref={textArea}
         autoFocus
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -78,12 +74,12 @@ const App = () => {
         items={nonCompletedItems}
         onCheckboxCheck={({ line, rawLine, index }) => {
           setCompletedItems((completedItems) => [
-            ...completedItems,
             {
               rawLine,
               line,
               date: format(new Date(), "yyyy-MM-dd HH:mm"),
             },
+            ...completedItems,
           ]);
           setText(
             textToLineArray

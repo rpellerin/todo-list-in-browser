@@ -1,4 +1,5 @@
 import React from "react";
+import { addLinkTags } from "./urls";
 
 const ItemsList = ({ items, onCheckboxCheck, checked, render, ...props }) => {
   if (items.length === 0) return <div>Empty</div>;
@@ -11,7 +12,9 @@ const ItemsList = ({ items, onCheckboxCheck, checked, render, ...props }) => {
             checked={checked}
             onChange={() => onCheckboxCheck(item, index)}
           />{" "}
-          {render(item)}
+          <span
+            dangerouslySetInnerHTML={{ __html: addLinkTags(render(item)) }}
+          />
         </li>
       ))}
     </ul>
